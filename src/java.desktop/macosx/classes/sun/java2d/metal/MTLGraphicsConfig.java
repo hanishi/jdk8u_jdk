@@ -23,27 +23,7 @@
  * questions.
  */
 
-package sun.java2d.opengl;
-
-import java.awt.AWTException;
-import java.awt.AWTError;
-import java.awt.BufferCapabilities;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.ImageCapabilities;
-import java.awt.Rectangle;
-import java.awt.Transparency;
-import java.awt.color.ColorSpace;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DirectColorModel;
-import java.awt.image.VolatileImage;
-import java.awt.image.WritableRaster;
-import java.util.HashMap;
-import java.util.concurrent.Callable;
+package sun.java2d.metal;
 
 import sun.awt.CGraphicsConfig;
 import sun.awt.CGraphicsDevice;
@@ -53,20 +33,31 @@ import sun.java2d.Disposer;
 import sun.java2d.DisposerRecord;
 import sun.java2d.Surface;
 import sun.java2d.SurfaceData;
+import sun.java2d.opengl.OGLContext;
 import sun.java2d.opengl.OGLContext.OGLContextCaps;
+import sun.java2d.opengl.OGLGraphicsConfig;
+import sun.java2d.opengl.OGLRenderQueue;
+import sun.java2d.opengl.OGLSurfaceData;
 import sun.java2d.pipe.hw.AccelSurface;
 import sun.java2d.pipe.hw.AccelTypedVolatileImage;
 import sun.java2d.pipe.hw.ContextCapabilities;
-import static sun.java2d.opengl.OGLSurfaceData.*;
-import static sun.java2d.opengl.OGLContext.OGLContextCaps.*;
-
 import sun.lwawt.LWComponentPeer;
 import sun.lwawt.macosx.CFRetainedResource;
 import sun.lwawt.macosx.CPlatformView;
 import sun.lwawt.macosx.CThreading;
-import java.security.PrivilegedAction;
 
-public final class CGLGraphicsConfig extends CGraphicsConfig
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.image.*;
+import java.util.HashMap;
+import java.util.concurrent.Callable;
+
+import static sun.java2d.opengl.OGLContext.OGLContextCaps.CAPS_DOUBLEBUFFERED;
+import static sun.java2d.opengl.OGLContext.OGLContextCaps.CAPS_EXT_FBOBJECT;
+import static sun.java2d.opengl.OGLSurfaceData.FBOBJECT;
+import static sun.java2d.opengl.OGLSurfaceData.TEXTURE;
+
+public final class MTLGraphicsConfig extends CGraphicsConfig
     implements OGLGraphicsConfig
 {
     //private static final int kOpenGLSwapInterval =
@@ -102,7 +93,7 @@ public final class CGLGraphicsConfig extends CGraphicsConfig
         cglAvailable = initCGL();
     }
 
-    private CGLGraphicsConfig(CGraphicsDevice device, int pixfmt,
+    private MTLGraphicsConfig(CGraphicsDevice device, int pixfmt,
                               long configInfo, int maxTextureSize,
                               ContextCapabilities oglCaps) {
         super(device);
@@ -126,70 +117,72 @@ public final class CGLGraphicsConfig extends CGraphicsConfig
 
     @Override
     public SurfaceData createManagedSurface(int w, int h, int transparency) {
-        return CGLSurfaceData.createData(this, w, h,
+        return MTLSurfaceData.createData(this, w, h,
                                          getColorModel(transparency),
                                          null,
                                          OGLSurfaceData.TEXTURE);
     }
 
-    public static CGLGraphicsConfig getConfig(CGraphicsDevice device,
+    public static MTLGraphicsConfig getConfig(CGraphicsDevice device,
                                               int pixfmt)
     {
         if (!cglAvailable) {
             return null;
         }
 
-        // Move CGLGraphicsConfig creation code to AppKit thread in order to avoid the
+        // Move MTLGraphicsConfig creation code to AppKit thread in order to avoid the
         // following deadlock:
-        // 1) CGLGraphicsConfig.getCGLConfigInfo (called from EDT) takes RenderQueue.lock
-        // 2) CGLLayer.drawInCGLContext is invoked on AppKit thread and
+        // 1) MTLGraphicsConfig.getCGLConfigInfo (called from EDT) takes RenderQueue.lock
+        // 2) MTLLayer.drawInCGLContext is invoked on AppKit thread and
         //    blocked on RenderQueue.lock
         // 1) invokes native block on AppKit and wait
 
-        Callable<CGLGraphicsConfig> command = () -> {
-            long cfginfo;
-            int textureSize = 0;
-            final String ids[] = new String[1];
-            OGLRenderQueue rq = OGLRenderQueue.getInstance();
-            rq.lock();
-            try {
-                // getCGLConfigInfo() creates and destroys temporary
-                // surfaces/contexts, so we should first invalidate the current
-                // Java-level context and flush the queue...
-                OGLContext.invalidateCurrentContext();
+        Callable<MTLGraphicsConfig> command = new Callable<MTLGraphicsConfig>() {
+            @Override
+            public MTLGraphicsConfig call() throws Exception {
+                long cfginfo = 0;
+                int textureSize = 0;
+                final String ids[] = new String[1];
+                OGLRenderQueue rq = OGLRenderQueue.getInstance();
+                rq.lock();
+                try {
+                    // getCGLConfigInfo() creates and destroys temporary
+                    // surfaces/contexts, so we should first invalidate the current
+                    // Java-level context and flush the queue...
+                    OGLContext.invalidateCurrentContext();
 
-                cfginfo = getCGLConfigInfo(device.getCGDisplayID(), pixfmt,
-                        kOpenGLSwapInterval);
-                if (cfginfo != 0L) {
-                    textureSize = nativeGetMaxTextureSize();
-                    // 7160609: GL still fails to create a square texture of this
-                    // size. Half should be safe enough.
-                    // Explicitly not support a texture more than 2^14, see 8010999.
-                    textureSize = textureSize <= 16384 ? textureSize / 2 : 8192;
-                    OGLContext.setScratchSurface(cfginfo);
-                    rq.flushAndInvokeNow(() -> ids[0] = OGLContext.getOGLIdString());
+                    cfginfo = getCGLConfigInfo(device.getCGDisplayID(), pixfmt,
+                            kOpenGLSwapInterval);
+                    if (cfginfo != 0L) {
+                        textureSize = nativeGetMaxTextureSize();
+                        // 7160609: GL still fails to create a square texture of this
+                        // size. Half should be safe enough.
+                        // Explicitly not support a texture more than 2^14, see 8010999.
+                        textureSize = textureSize <= 16384 ? textureSize / 2 : 8192;
+                        OGLContext.setScratchSurface(cfginfo);
+                        rq.flushAndInvokeNow(() -> {
+                            ids[0] = OGLContext.getOGLIdString();
+                        });
+                    }
+                } finally {
+                    rq.unlock();
                 }
-            } finally {
-                rq.unlock();
-            }
-            if (cfginfo == 0) {
-                return null;
-            }
+                if (cfginfo == 0) {
+                    return null;
+                }
 
-            int oglCaps = getOGLCapabilities(cfginfo);
-            ContextCapabilities caps = new OGLContextCaps(oglCaps, ids[0]);
-            return new CGLGraphicsConfig(
-                    device, pixfmt, cfginfo, textureSize, caps);
+                int oglCaps = getOGLCapabilities(cfginfo);
+                ContextCapabilities caps = new OGLContextCaps(oglCaps, ids[0]);
+                return new MTLGraphicsConfig(
+                        device, pixfmt, cfginfo, textureSize, caps);
+            }
         };
 
-        return java.security.AccessController.doPrivileged(
-                (PrivilegedAction<CGLGraphicsConfig>) () -> {
-                    try {
-                        return CThreading.executeOnAppKit(command);
-                    } catch (Throwable throwable) {
-                        throw new AWTError(throwable.getMessage());
-                    }
-                });
+        try {
+            return CThreading.executeOnAppKit(command);
+        } catch (Throwable throwable) {
+            throw new AWTError(throwable.getMessage());
+        }
     }
 
     static void refPConfigInfo(long pConfigInfo) {
@@ -297,8 +290,8 @@ public final class CGLGraphicsConfig extends CGraphicsConfig
     public synchronized void displayChanged() {
         //super.displayChanged();
 
-        // the context could hold a reference to a CGLSurfaceData, which in
-        // turn has a reference back to this CGLGraphicsConfig, so in order
+        // the context could hold a reference to a MTLSurfaceData, which in
+        // turn has a reference back to this MTLGraphicsConfig, so in order
         // for this instance to be disposed we need to break the connection
         OGLRenderQueue rq = OGLRenderQueue.getInstance();
         rq.lock();
@@ -312,17 +305,17 @@ public final class CGLGraphicsConfig extends CGraphicsConfig
     @Override
     public String toString() {
         int displayID = getDevice().getCGDisplayID();
-        return ("CGLGraphicsConfig[dev="+displayID+",pixfmt="+pixfmt+"]");
+        return ("MTLGraphicsConfig[dev="+displayID+",pixfmt="+pixfmt+"]");
     }
 
     @Override
     public SurfaceData createSurfaceData(CPlatformView pView) {
-        return CGLSurfaceData.createData(pView);
+        return MTLSurfaceData.createData(pView);
     }
 
     @Override
     public SurfaceData createSurfaceData(CFRetainedResource layer) {
-        return CGLSurfaceData.createData((CGLLayer) layer);
+        return MTLSurfaceData.createData((MTLLayer) layer);
     }
 
     @Override
