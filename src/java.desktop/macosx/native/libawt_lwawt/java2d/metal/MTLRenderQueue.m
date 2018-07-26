@@ -431,7 +431,7 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jfloat extraAlpha = NEXT_FLOAT(b);
                 jint flags        = NEXT_INT(b);
                 fprintf(stderr, "MTLContext_SetAlphaComposite\n");
-                //MTLContext_SetAlphaComposite(mtlc, rule, extraAlpha, flags);
+                MTLContext_SetAlphaComposite(mtlc, rule, extraAlpha, flags);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_SET_XOR_COMPOSITE:
@@ -631,6 +631,17 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
         case sun_java2d_pipe_BufferedOpCodes_SET_COLOR:
             {
                 jint pixel = NEXT_INT(b);
+                fprintf(stderr, "--sun_java2d_pipe_BufferedOpCodes_SET_COLOR--\n");
+
+                if (dstOps != NULL) {
+                    MTLSDOps *dstCGLOps = (MTLSDOps *)dstOps->privOps;
+                    MTLLayer *layer = (MTLLayer*)dstCGLOps->layer;
+                    if (layer != NULL) {
+                        [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+                            [layer setColor:pixel];
+                        }];
+                    }
+                }
                 MTLPaints_SetColor(mtlc, pixel);
             }
             break;

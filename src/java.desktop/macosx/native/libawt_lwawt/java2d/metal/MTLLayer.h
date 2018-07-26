@@ -57,6 +57,7 @@
 
 - (id) initWithJavaLayer:(JNFWeakJObjectWrapper *)javaLayer;
 - (void) blitTexture;
+- (void) setColor:(jint)c;
 - (void) draw;
 - (void) fillParallelogramX:(jfloat)x
                           Y:(jfloat)y

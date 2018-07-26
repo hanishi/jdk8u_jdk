@@ -326,20 +326,37 @@ void
 MTLRenderer_FillSpans(MTLContext *mtlc, jint spanCount, jint *spans)
 {
     J2dTraceLn(J2D_TRACE_INFO, "MTLRenderer_FillSpans");
-/*
-    RETURN_IF_NULL(mtlc);
-    RETURN_IF_NULL(spans);
 
-    CHECK_PREVIOUS_OP(GL_QUADS);
+//    RETURN_IF_NULL(mtlc);
+//    RETURN_IF_NULL(spans);
+
+//    CHECK_PREVIOUS_OP(GL_QUADS);
     while (spanCount > 0) {
         jint x1 = *(spans++);
         jint y1 = *(spans++);
         jint x2 = *(spans++);
         jint y2 = *(spans++);
-        GLRECT_BODY_XYXY(x1, y1, x2, y2);
+        BMTLSDOps *dstOps = MTLRenderQueue_GetCurrentDestination();
+
+        fprintf(stderr, "MTLRenderer_FillParallelogram "
+                        "(%p x=%6.2f y=%6.2f "
+                        "dx1=%6.2f dy1=%6.2f "
+                        "dx2=%6.2f dy2=%6.2f)\n",
+                dstOps, x1, y1,
+                x2 - x1, 0,
+                0, y2 - y1);
+
+        if (dstOps != NULL) {
+            MTLSDOps *dstCGLOps = (MTLSDOps *) dstOps->privOps;
+            MTLLayer *layer = (MTLLayer *) dstCGLOps->layer;
+            if (layer != NULL) {
+                [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+                    [layer fillParallelogramX:x1 Y:y1 DX1:x2-x1 DY1:0 DX2:0 DY2:y2 - y1];
+                }];
+            }
+        }
         spanCount--;
     }
-    */
 }
 
 #define FILL_PGRAM(fx11, fy11, dx21, dy21, dx12, dy12) \

@@ -26,6 +26,7 @@ static struct Vertex verts[N*3];
     id <MTLCommandBuffer> _commandBuffer;
     struct FrameUniforms * _uniforms;
     BOOL _emptyCommandBuffer;
+    jint _color;
 }
 
 @synthesize javaLayer;
@@ -103,39 +104,6 @@ AWT_ASSERT_APPKIT_THREAD;
         exit(0);
     }
 
-
-    verts[0].position[0] = 0;
-    verts[0].position[1] = 0;
-    verts[0].position[2] = 0;
-
-    verts[1].position[0] = 1;
-    verts[1].position[1] = 0;
-    verts[1].position[2] = 0;
-
-    verts[2].position[0] = 1;
-    verts[2].position[1] = 1;
-    verts[2].position[2] = 0;
-
-    verts[0].color[0] = 255;
-    verts[0].color[1] = 0;
-    verts[0].color[2] = 255;
-    verts[0].color[3] = 255;
-
-    verts[1].color[0] = 255;
-    verts[1].color[1] = 255;
-    verts[1].color[2] = 0;
-    verts[1].color[3] = 255;
-
-    verts[2].color[0] = 255;
-    verts[2].color[1] = 255;
-    verts[2].color[2] = 255;
-    verts[2].color[3] = 0;
-
-    _vertexBuffer = [_device newBufferWithBytes:verts
-                                             length:sizeof(verts)
-                                            options:
-                                                    MTLResourceCPUCacheModeDefaultCache];
-
     _uniformBuffer = [_device newBufferWithLength:sizeof(struct FrameUniforms)
                                           options:MTLResourceCPUCacheModeWriteCombined];
 
@@ -147,6 +115,10 @@ AWT_ASSERT_APPKIT_THREAD;
     _commandBuffer = nil;
     _emptyCommandBuffer = YES;
     return self;
+}
+- (void) setColor:(jint)c {
+    _color = c;
+    fprintf(stderr, "----setColor %x ----\n", c);
 }
 
 - (void) fillParallelogramX:(jfloat)x
@@ -186,36 +158,35 @@ AWT_ASSERT_APPKIT_THREAD;
     verts[5].position[1] = 2.0*(1.0 - (y+dy2)/self.drawableSize.height) - 1.0;
     verts[5].position[2] = 0;
 
-    verts[0].color[0] = 255;
-    verts[0].color[1] = 0;
-    verts[0].color[2] = 255;
-    verts[0].color[3] = 255;
+    verts[0].color[0] = (_color >> 16)&(0xFF);
+    verts[0].color[1] = (_color >> 8)&0xFF;
+    verts[0].color[2] = (_color)&0xFF;
+    verts[0].color[3] = (_color >> 24)&0xFF;
 
-    verts[1].color[0] = 255;
-    verts[1].color[1] = 255;
-    verts[1].color[2] = 0;
-    verts[1].color[3] = 255;
+    verts[1].color[0] = (_color >> 16)&(0xFF);
+    verts[1].color[1] = (_color >> 8)&0xFF;
+    verts[1].color[2] = (_color)&0xFF;
+    verts[1].color[3] = (_color >> 24)&0xFF;
 
-    verts[2].color[0] = 255;
-    verts[2].color[1] = 255;
-    verts[2].color[2] = 255;
-    verts[2].color[3] = 0;
+    verts[2].color[0] = (_color >> 16)&(0xFF);
+    verts[2].color[1] = (_color >> 8)&0xFF;
+    verts[2].color[2] = (_color)&0xFF;
+    verts[2].color[3] = (_color >> 24)&0xFF;
 
-    verts[3].color[0] = 255;
-    verts[3].color[1] = 0;
-    verts[3].color[2] = 255;
-    verts[3].color[3] = 255;
+    verts[3].color[0] = (_color >> 16)&(0xFF);
+    verts[3].color[1] = (_color >> 8)&0xFF;
+    verts[3].color[2] = (_color)&0xFF;
+    verts[3].color[3] = (_color >> 24)&0xFF;
 
-    verts[4].color[0] = 255;
-    verts[4].color[1] = 255;
-    verts[4].color[2] = 0;
-    verts[4].color[3] = 255;
+    verts[4].color[0] = (_color >> 16)&(0xFF);
+    verts[4].color[1] = (_color >> 8)&0xFF;
+    verts[4].color[2] = (_color)&0xFF;
+    verts[4].color[3] = (_color >> 24)&0xFF;
 
-    verts[5].color[0] = 255;
-    verts[5].color[1] = 255;
-    verts[5].color[2] = 255;
-    verts[5].color[3] = 0;
-
+    verts[5].color[0] = (_color >> 16)&(0xFF);
+    verts[5].color[1] = (_color >> 8)&0xFF;
+    verts[5].color[2] = (_color)&0xFF;
+    verts[5].color[3] = (_color >> 24)&0xFF;
 
     _vertexBuffer = [_device newBufferWithBytes:verts
                                          length:sizeof(verts)

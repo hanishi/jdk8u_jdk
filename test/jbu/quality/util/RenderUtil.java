@@ -135,8 +135,13 @@ public class RenderUtil {
             painter.accept((Graphics2D)g);
             g.setClip(savedClip);
             g.setColor(Color.black);
-            ((Graphics2D) g).setStroke(new BasicStroke(10));
-            g.drawRect(-5, -5, getWidth() - 5, getHeight() - 5);
+//            ((Graphics2D) g).setStroke(new BasicStroke(10));
+            g.fillRect(-5, -10, getWidth() + 5, 10);
+            g.fillRect(getWidth() - 10, -10, getWidth() + 5, getHeight() + 5);
+            g.fillRect(-5, getHeight() - 10, getWidth() + 5, 10);
+            g.fillRect(-5, -10,  10, getHeight() + 5);
+
+//            g.drawRect(-5, -5, getWidth() - 5, getHeight() - 5);
         }
     }
 
