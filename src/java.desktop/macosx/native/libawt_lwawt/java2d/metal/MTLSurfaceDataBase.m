@@ -246,7 +246,6 @@ Java_sun_java2d_metal_MTLSurfaceDataBase_initTexture
      jint width, jint height)
 {
     BMTLSDOps *mtlsdo = (BMTLSDOps *)jlong_to_ptr(pData);
-fprintf(stderr, "MTLSurfaceData_initTexture\n");
     J2dTraceLn2(J2D_TRACE_INFO, "MTLSurfaceData_initTexture: w=%d h=%d",
                 width, height);
 
@@ -397,7 +396,6 @@ Java_sun_java2d_metal_MTLSurfaceDataBase_initFBObject
      jboolean texNonPow2, jboolean texRect,
      jint width, jint height)
 {
-fprintf(stderr, "Java_sun_java2d_metal_MTLSurfaceData_initFBObject\n");
  /*   MTLSDOps *mtlsdo = (MTLSDOps *)jlong_to_ptr(pData);
     GLuint fbobjectID, depthID;
 

@@ -338,13 +338,13 @@ MTLRenderer_FillSpans(MTLContext *mtlc, jint spanCount, jint *spans)
         jint y2 = *(spans++);
         BMTLSDOps *dstOps = MTLRenderQueue_GetCurrentDestination();
 
-        fprintf(stderr, "MTLRenderer_FillParallelogram "
-                        "(%p x=%6.2f y=%6.2f "
-                        "dx1=%6.2f dy1=%6.2f "
-                        "dx2=%6.2f dy2=%6.2f)\n",
-                dstOps, x1, y1,
-                x2 - x1, 0,
-                0, y2 - y1);
+//        fprintf(stderr, "MTLRenderer_FillParallelogram "
+//                        "(%p x=%6.2f y=%6.2f "
+//                        "dx1=%6.2f dy1=%6.2f "
+//                        "dx2=%6.2f dy2=%6.2f)\n",
+//                dstOps, x1, y1,
+//                x2 - x1, 0,
+//                0, y2 - y1);
 
         if (dstOps != NULL) {
             MTLSDOps *dstCGLOps = (MTLSDOps *) dstOps->privOps;
@@ -373,13 +373,13 @@ MTLRenderer_FillParallelogram(MTLContext *mtlc,
                               jfloat dx21, jfloat dy21,
                               jfloat dx12, jfloat dy12)
 {
-fprintf(stderr, "MTLRenderer_FillParallelogram "
-                                "(x=%6.2f y=%6.2f "
-                                "dx1=%6.2f dy1=%6.2f "
-                                "dx2=%6.2f dy2=%6.2f)\n",
-                                fx11, fy11,
-                                dx21, dy21,
-                                dx12, dy12);
+//fprintf(stderr, "MTLRenderer_FillParallelogram "
+//                                "(x=%6.2f y=%6.2f "
+//                                "dx1=%6.2f dy1=%6.2f "
+//                                "dx2=%6.2f dy2=%6.2f)\n",
+//                                fx11, fy11,
+//                                dx21, dy21,
+//                                dx12, dy12);
     J2dTraceLn6(J2D_TRACE_INFO,
                 "MTLRenderer_FillParallelogram "
                 "(x=%6.2f y=%6.2f "
@@ -391,13 +391,13 @@ fprintf(stderr, "MTLRenderer_FillParallelogram "
    // MTLCtxInfo *ctxinfo = (MTLCtxInfo *)mtlc->ctxInfo;
     BMTLSDOps *dstOps = MTLRenderQueue_GetCurrentDestination();
 
-    fprintf(stderr, "MTLRenderer_FillParallelogram "
-                    "(%p x=%6.2f y=%6.2f "
-                    "dx1=%6.2f dy1=%6.2f "
-                    "dx2=%6.2f dy2=%6.2f)\n",
-            dstOps, fx11, fy11,
-            dx21, dy21,
-            dx12, dy12);
+//    fprintf(stderr, "MTLRenderer_FillParallelogram "
+//                    "(%p x=%6.2f y=%6.2f "
+//                    "dx1=%6.2f dy1=%6.2f "
+//                    "dx2=%6.2f dy2=%6.2f)\n",
+//            dstOps, fx11, fy11,
+//            dx21, dy21,
+//            dx12, dy12);
 
     if (dstOps != NULL) {
         MTLSDOps *dstCGLOps = (MTLSDOps *)dstOps->privOps;
@@ -408,10 +408,10 @@ fprintf(stderr, "MTLRenderer_FillParallelogram "
                 [layer fillParallelogramX:fx11 Y:fy11 DX1:dx21 DY1:dy21 DX2:dx12 DY2:dy12];
             }];
         } else {
-            fprintf(stderr, "MTLRenderer_FillParallelogram: dstCGLOps->layer=NULL\n");
+//            fprintf(stderr, "MTLRenderer_FillParallelogram: dstCGLOps->layer=NULL\n");
         }
     } else {
-        fprintf(stderr, "MTLRenderer_FillParallelogram: dstOps=NULL\n");
+//        fprintf(stderr, "MTLRenderer_FillParallelogram: dstOps=NULL\n");
     }
 
 /*

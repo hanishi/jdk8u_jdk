@@ -97,7 +97,7 @@ Java_sun_java2d_metal_MTLGraphicsConfig_initMTL
     (JNIEnv *env, jclass cglgc)
 {
     J2dRlsTraceLn(J2D_TRACE_INFO, "MTLGraphicsConfig_initMTL");
-fprintf(stderr, "MTLGraphicsConfig_initMTL\n");
+//fprintf(stderr, "MTLGraphicsConfig_initMTL\n");
 
     if (!MTLFuncs_OpenLibrary()) {
         return JNI_FALSE;
@@ -115,7 +115,7 @@ fprintf(stderr, "MTLGraphicsConfig_initMTL\n");
     pthread_create(&jrsRemoteThread, NULL, JRSRemoteThreadFn, NULL);
 #endif
 
-fprintf(stderr, "MTLGraphicsConfig_initMTL: OK\n");
+//fprintf(stderr, "MTLGraphicsConfig_initMTL: OK\n");
 
     return JNI_TRUE;
 }

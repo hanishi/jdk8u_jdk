@@ -73,8 +73,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
     jboolean sync = JNI_FALSE;
     unsigned char *b, *end;
 
-    fprintf(stderr, "MTLRenderQueue_flushBuffer\n");
-
     J2dTraceLn1(J2D_TRACE_INFO,
                 "MTLRenderQueue_flushBuffer: limit=%d", limit);
 
@@ -99,7 +97,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
             opcode != sun_java2d_pipe_BufferedOpCodes_NOOP)
         {
             //MTLTR_DisableGlyphModeState();
-            fprintf(stderr, "MTLTR_DisableGlyphModeState\n");
         }
 
         switch (opcode) {
@@ -112,7 +109,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint x2 = NEXT_INT(b);
                 jint y2 = NEXT_INT(b);
                 //MTLRenderer_DrawLine(mtlc, x1, y1, x2, y2);
-                fprintf(stderr, "MTLRenderer_DrawLine\n");
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_DRAW_RECT:
@@ -122,7 +118,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint w = NEXT_INT(b);
                 jint h = NEXT_INT(b);
                 //MTLRenderer_DrawRect(mtlc, x, y, w, h);
-                fprintf(stderr, "MTLRenderer_DrawRect\n");
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_DRAW_POLY:
@@ -136,7 +131,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                // MTLRenderer_DrawPoly(mtlc, nPoints, isClosed,
                //                      transX, transY,
                //                      xPoints, yPoints);
-                fprintf(stderr, "MTLRenderer_DrawPoly\n");
                 SKIP_BYTES(b, nPoints * BYTES_PER_POLY_POINT);
             }
             break;
@@ -154,7 +148,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 CHECK_PREVIOUS_OP(0x0001);
             //    j2d_glVertex2i(x, y);
             //    j2d_glVertex2i(x+1, y+1);
-                fprintf(stderr, "sun_java2d_pipe_BufferedOpCodes_DRAW_PIXEL\n");
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_DRAW_SCANLINES:
@@ -162,7 +155,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint count = NEXT_INT(b);
                 //MTLRenderer_DrawScanlines(mtlc, count, (jint *)b);
 
-                fprintf(stderr, "MTLRenderer_DrawScanlines\n");
                 SKIP_BYTES(b, count * BYTES_PER_SCANLINE);
             }
             break;
@@ -176,7 +168,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jfloat dy12 = NEXT_FLOAT(b);
                 jfloat lwr21 = NEXT_FLOAT(b);
                 jfloat lwr12 = NEXT_FLOAT(b);
-                fprintf(stderr, "MTLRenderer_DrawParallelogram\n");
 
               //  MTLRenderer_DrawParallelogram(mtlc,
               //                                x11, y11,
@@ -195,7 +186,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jfloat dy12 = NEXT_FLOAT(b);
                 jfloat lwr21 = NEXT_FLOAT(b);
                 jfloat lwr12 = NEXT_FLOAT(b);
-                fprintf(stderr, "MTLRenderer_DrawAAParallelogram\n");
 
                 //MTLRenderer_DrawAAParallelogram(mtlc, dstOps,
                 //                                x11, y11,
@@ -212,7 +202,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint y = NEXT_INT(b);
                 jint w = NEXT_INT(b);
                 jint h = NEXT_INT(b);
-                fprintf(stderr, "MTLRenderer_FillRect\n");
                // MTLRenderer_FillRect(mtlc, x, y, w, h);
             }
             break;
@@ -231,7 +220,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jfloat dy21 = NEXT_FLOAT(b);
                 jfloat dx12 = NEXT_FLOAT(b);
                 jfloat dy12 = NEXT_FLOAT(b);
-                //fprintf(stderr, "MTLRenderer_FillParallelogram\n");
                 MTLRenderer_FillParallelogram(mtlc,
                                               x11, y11,
                                               dx21, dy21,
@@ -246,7 +234,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jfloat dy21 = NEXT_FLOAT(b);
                 jfloat dx12 = NEXT_FLOAT(b);
                 jfloat dy12 = NEXT_FLOAT(b);
-                fprintf(stderr, "MTLRenderer_FillAAParallelogram\n");
                 //MTLRenderer_FillAAParallelogram(mtlc, dstOps,
                 //                                x11, y11,
                 //                                dx21, dy21,
@@ -279,7 +266,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                     positions = NULL;
                     bytesPerGlyph = BYTES_PER_GLYPH_IMAGE;
                 }
-                fprintf(stderr, "MTLTR_DrawGlyphList\n");
               //  MTLTR_DrawGlyphList(env, mtlc, dstOps,
               //                      numGlyphs, usePositions,
               //                      subPixPos, rgbOrder, lcdContrast,
@@ -298,7 +284,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint h  = NEXT_INT(b);
                 jint dx = NEXT_INT(b);
                 jint dy = NEXT_INT(b);
-                fprintf(stderr, "MTLBlitLoops_CopyArea\n");
                 //MTLBlitLoops_CopyArea(env, mtlc, dstOps,
                 //                      x, y, w, h, dx, dy);
             }
@@ -326,14 +311,12 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jboolean isoblit  = EXTRACT_BOOLEAN(packedParams,
                                                     OFFSET_ISOBLIT);
                 if (isoblit) {
-                    fprintf(stderr, "MTLBlitLoops_IsoBlit\n");
                     //MTLBlitLoops_IsoBlit(env, mtlc, pSrc, pDst,
                     //                     xform, hint, texture, rtt,
                     //                     sx1, sy1, sx2, sy2,
                     //                     dx1, dy1, dx2, dy2);
                 } else {
                     jint srctype = EXTRACT_BYTE(packedParams, OFFSET_SRCTYPE);
-                    fprintf(stderr, "MTLBlitLoops_Blit\n");
                    // MTLBlitLoops_Blit(env, mtlc, pSrc, pDst,
                    //                   xform, hint, srctype, texture,
                    //                   sx1, sy1, sx2, sy2,
@@ -352,7 +335,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint dsttype = NEXT_INT(b);
                 jlong pSrc   = NEXT_LONG(b);
                 jlong pDst   = NEXT_LONG(b);
-                fprintf(stderr, "MTLBlitLoops_SurfaceToSwBlit\n");
               //  MTLBlitLoops_SurfaceToSwBlit(env, mtlc,
               //                               pSrc, pDst, dsttype,
               //                               sx, sy, dx, dy, w, h);
@@ -368,7 +350,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint maskscan = NEXT_INT(b);
                 jint masklen  = NEXT_INT(b);
                 unsigned char *pMask = (masklen > 0) ? b : NULL;
-                fprintf(stderr, "MTLMaskFill_MaskFill\n");
                // MTLMaskFill_MaskFill(mtlc, x, y, w, h,
                //                      maskoff, maskscan, masklen, pMask);
                 SKIP_BYTES(b, masklen);
@@ -381,7 +362,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint width    = NEXT_INT(b);
                 jint height   = NEXT_INT(b);
                 jint masklen  = width * height * sizeof(jint);
-                fprintf(stderr, "MTLMaskBlit_MaskBlit\n");
                 //MTLMaskBlit_MaskBlit(env, mtlc,
                 //                     dstx, dsty, width, height, b);
                 SKIP_BYTES(b, masklen);
@@ -395,13 +375,11 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint y1 = NEXT_INT(b);
                 jint x2 = NEXT_INT(b);
                 jint y2 = NEXT_INT(b);
-                fprintf(stderr, "MTLMaskBlit_MaskBlit\n");
                 //MTLContext_SetRectClip(mtlc, dstOps, x1, y1, x2, y2);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_BEGIN_SHAPE_CLIP:
             {
-            fprintf(stderr, "MTLContext_BeginShapeClip\n");
                 //MTLContext_BeginShapeClip(mtlc);
             }
             break;
@@ -409,19 +387,16 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
             {
                 jint count = NEXT_INT(b);
                // MTLRenderer_FillSpans(mtlc, count, (jint *)b);
-                fprintf(stderr, "MTLRenderer_FillSpans\n");
                 SKIP_BYTES(b, count * BYTES_PER_SPAN);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_END_SHAPE_CLIP:
             {
-            fprintf(stderr, "MTLContext_EndShapeClip\n");
                // MTLContext_EndShapeClip(mtlc, dstOps);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_RESET_CLIP:
             {
-            fprintf(stderr, "MTLContext_ResetClip\n");
                 //MTLContext_ResetClip(mtlc);
             }
             break;
@@ -430,20 +405,17 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jint rule         = NEXT_INT(b);
                 jfloat extraAlpha = NEXT_FLOAT(b);
                 jint flags        = NEXT_INT(b);
-                fprintf(stderr, "MTLContext_SetAlphaComposite\n");
                 MTLContext_SetAlphaComposite(mtlc, rule, extraAlpha, flags);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_SET_XOR_COMPOSITE:
             {
                 jint xorPixel = NEXT_INT(b);
-                fprintf(stderr, "MTLContext_SetXorComposite\n");
                 //MTLContext_SetXorComposite(mtlc, xorPixel);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_RESET_COMPOSITE:
             {
-             fprintf(stderr, "MTLContext_ResetComposite\n");
                // MTLContext_ResetComposite(mtlc);
             }
             break;
@@ -455,13 +427,11 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jdouble m11 = NEXT_DOUBLE(b);
                 jdouble m02 = NEXT_DOUBLE(b);
                 jdouble m12 = NEXT_DOUBLE(b);
-                 fprintf(stderr, "MTLContext_SetTransform\n");
                 //MTLContext_SetTransform(mtlc, m00, m10, m01, m11, m02, m12);
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_RESET_TRANSFORM:
             {
-            fprintf(stderr, "MTLContext_ResetTransform\n");
                // MTLContext_ResetTransform(mtlc);
             }
             break;
@@ -474,7 +444,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 if (mtlc != NULL) {
                     RESET_PREVIOUS_OP();
                 }
-                 fprintf(stderr, "MTLContext_SetSurfaces \n");
                 mtlc = MTLContext_SetSurfaces(env, pSrc, pDst);
 
                 BMTLSDOps* oldDstOps = dstOps;
@@ -498,8 +467,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                             }];
                         }
                     }
-                } else {
-                    fprintf(stderr, "SET_SURFACES: dstOps=NULL\n");
                 }
             }
             break;
@@ -509,7 +476,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 if (mtlc != NULL) {
                     RESET_PREVIOUS_OP();
                 }
-                fprintf(stderr, "MTLSD_SetScratchSurface\n");
                 mtlc = MTLSD_SetScratchSurface(env, pConfigInfo);
                // dstOps = NULL;
             }
@@ -521,7 +487,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 if (mtlsdo != NULL) {
                     CONTINUE_IF_NULL(mtlc);
                     RESET_PREVIOUS_OP();
-                    fprintf(stderr, "MTLSD_Delete\n");
                     MTLSD_Delete(env, mtlsdo);
                 }
             }
@@ -533,7 +498,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 if (mtlsdo != NULL) {
                     CONTINUE_IF_NULL(mtlc);
                     RESET_PREVIOUS_OP();
-                    fprintf(stderr, "MTLSD_Delete\n");
                     MTLSD_Delete(env, mtlsdo);
                     if (mtlsdo->privOps != NULL) {
                         free(mtlsdo->privOps);
@@ -546,7 +510,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 jlong pConfigInfo = NEXT_LONG(b);
                 CONTINUE_IF_NULL(mtlc);
                 RESET_PREVIOUS_OP();
-                fprintf(stderr, "MTLGC_DestroyMTLGraphicsConfig\n");
                 MTLGC_DestroyMTLGraphicsConfig(pConfigInfo);
 
                 // the previous method will call glX/wglMakeCurrent(None),
@@ -564,7 +527,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                     RESET_PREVIOUS_OP();
               //      j2d_glFlush();
                 }
-                fprintf(stderr, "case sun_java2d_pipe_BufferedOpCodes_INVALIDATE_CONTEXT\n");
                 // invalidate the references to the current context and
                 // destination surface that are maintained at the native level
                 mtlc = NULL;
@@ -581,7 +543,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 //j2d_glPushMatrix();
                 //j2d_glMatrixMode(GL_TEXTURE);
                 //j2d_glPushMatrix();
-                fprintf(stderr, "case sun_java2d_pipe_BufferedOpCodes_SAVE_STATE\n");
 
             }
             break;
@@ -596,13 +557,11 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                // j2d_glPopMatrix();
                // j2d_glMatrixMode(GL_TEXTURE);
                // j2d_glPopMatrix();
-               fprintf(stderr, "case sun_java2d_pipe_BufferedOpCodes_RESTORE_STATE\n");
             }
             break;
         case sun_java2d_pipe_BufferedOpCodes_SYNC:
             {
                 sync = JNI_TRUE;
-                fprintf(stderr, "case sun_java2d_pipe_BufferedOpCodes_SYNC\n");
             }
             break;
 
@@ -613,7 +572,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                 if (mtlc != NULL) {
                     RESET_PREVIOUS_OP();
                 }
-                fprintf(stderr, "case MTLSD_SwapBuffers\n");
                 //MTLSD_SwapBuffers(env, window);
             }
             break;
@@ -631,7 +589,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
         case sun_java2d_pipe_BufferedOpCodes_SET_COLOR:
             {
                 jint pixel = NEXT_INT(b);
-                fprintf(stderr, "--sun_java2d_pipe_BufferedOpCodes_SET_COLOR--\n");
 
                 if (dstOps != NULL) {
                     MTLSDOps *dstCGLOps = (MTLSDOps *)dstOps->privOps;
@@ -787,7 +744,6 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
     }
 
     MTLTR_DisableGlyphModeState();
-    fprintf(stderr, "MTLTR_DisableGlyphModeState\n");
     if (mtlc != NULL) {
         RESET_PREVIOUS_OP();
         if (sync) {

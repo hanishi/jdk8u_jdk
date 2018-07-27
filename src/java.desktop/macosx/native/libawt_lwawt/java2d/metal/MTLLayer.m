@@ -37,7 +37,7 @@ static struct Vertex verts[N*3];
 
 - (id) initWithJavaLayer:(JNFWeakJObjectWrapper *)layer;
 {
-fprintf(stderr, "MTLayer.initWithJavaLayer\n");
+//fprintf(stderr, "MTLayer.initWithJavaLayer\n");
 AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
     self = [super init];
@@ -118,7 +118,7 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 - (void) setColor:(jint)c {
     _color = c;
-    fprintf(stderr, "----setColor %x ----\n", c);
+    //fprintf(stderr, "----setColor %x ----\n", c);
 }
 
 - (void) fillParallelogramX:(jfloat)x
@@ -132,7 +132,7 @@ AWT_ASSERT_APPKIT_THREAD;
         [self beginFrame];
     }
     _emptyCommandBuffer = NO;
-    fprintf(stderr, "----fillParallelogramX----\n");
+   // fprintf(stderr, "----fillParallelogramX----\n");
 
     verts[0].position[0] = (2.0*x/self.drawableSize.width) - 1.0;
     verts[0].position[1] = 2.0*(1.0 - y/self.drawableSize.height) - 1.0;
@@ -221,7 +221,7 @@ AWT_ASSERT_APPKIT_THREAD;
     if (_commandBuffer) {
         [self endFrame];
     }
-    fprintf(stderr, "----beginFrame----\n");
+ //   fprintf(stderr, "----beginFrame----\n");
 //    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     if (!_currentDrawable) {
         _currentDrawable = [[self nextDrawable] retain];
@@ -249,7 +249,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) endFrame {
 
     if (_commandBuffer) {
-        fprintf(stderr, "----endFrame----\n");
+//        fprintf(stderr, "----endFrame----\n");
 
 //        __block dispatch_semaphore_t semaphore = _semaphore;
 //        [_commandBuffer addCompletedHandler:^(id <MTLCommandBuffer> buffer) {
@@ -270,7 +270,7 @@ AWT_ASSERT_APPKIT_THREAD;
         _currentDrawable = nil;
         _commandBuffer = nil;
         _emptyCommandBuffer = YES;
-        fprintf(stderr, "----endFrame---- 1\n");
+       // fprintf(stderr, "----endFrame---- 1\n");
     }
 }
 
@@ -320,7 +320,7 @@ AWT_ASSERT_APPKIT_THREAD;
 
 -(void)draw
 {
-    fprintf(stderr, "MTLayer.draw\n");
+ //   fprintf(stderr, "MTLayer.draw\n");
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     if (!_currentDrawable) {
         _currentDrawable = [self nextDrawable];
@@ -441,7 +441,7 @@ Java_sun_java2d_metal_MTLLayer_validate
 (JNIEnv *env, jclass cls, jlong layerPtr, jobject surfaceData)
 {
     MTLLayer *layer = OBJC(layerPtr);
-fprintf(stderr, "Java_sun_java2d_metal_MTLLayer_validate\n");
+//fprintf(stderr, "Java_sun_java2d_metal_MTLLayer_validate\n");
     if (surfaceData != NULL) {
         BMTLSDOps *oglsdo = (BMTLSDOps*) SurfaceData_GetOps(env, surfaceData);
         layer.textureID = oglsdo->textureID;
@@ -458,7 +458,7 @@ JNIEXPORT void JNICALL
 Java_sun_java2d_metal_MTLLayer_blitTexture
 (JNIEnv *env, jclass cls, jlong layerPtr)
 {
-    fprintf(stderr, "Blit!!!\n");
+//    fprintf(stderr, "Blit!!!\n");
     MTLLayer *layer = jlong_to_ptr(layerPtr);
 
     [layer blitTexture];

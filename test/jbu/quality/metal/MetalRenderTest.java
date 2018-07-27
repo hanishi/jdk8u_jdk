@@ -14,11 +14,12 @@ public class MetalRenderTest {
         BufferedImage bi = RenderUtil.capture(120, 120,
                 graphics2D -> {
                     graphics2D.setColor(Color.GREEN);
-                    graphics2D.fillRect(0, 0, 50, 50);
+                    graphics2D.fillRect(10, 10, 50, 50);
                     graphics2D.setColor(Color.RED);
                     graphics2D.fillOval(30, 30, 150, 150);
 
                 });
+        RenderUtil.checkImage(bi, "metal", "geom.png");
     }
     @Test
     public void testMetal1() throws Exception {
