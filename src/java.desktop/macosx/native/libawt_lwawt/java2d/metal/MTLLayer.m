@@ -251,14 +251,7 @@ AWT_ASSERT_APPKIT_THREAD;
     if (_commandBuffer) {
 //        fprintf(stderr, "----endFrame----\n");
 
-//        __block dispatch_semaphore_t semaphore = _semaphore;
-//        [_commandBuffer addCompletedHandler:^(id <MTLCommandBuffer> buffer) {
-//            [_commandBuffer release];
-//            if (_currentDrawable) [_currentDrawable release];
-//            _commandBuffer = nil;
-//            dispatch_semaphore_signal(semaphore);
-//
-//        }];
+
         if (!_emptyCommandBuffer) {
             [_commandBuffer presentDrawable:_currentDrawable];
             [_commandBuffer commit];
@@ -278,17 +271,7 @@ AWT_ASSERT_APPKIT_THREAD;
     self.javaLayer = nil;
     [super dealloc];
 }
-/*
-- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return CGLRetainPixelFormat(sharedPixelFormat.CGLPixelFormatObj);
-}
 
-- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLContextObj contextObj = NULL;
-    CGLCreateContext(pixelFormat, sharedContext.CGLContextObj, &contextObj);
-    return contextObj;
-}
-*/
 // use texture (intermediate buffer) as src and blit it to the layer
 - (void) blitTexture
 {
