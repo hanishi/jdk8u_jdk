@@ -119,10 +119,11 @@ public class MTLRenderQueue extends RenderQueue {
         return (Thread.currentThread() == getInstance().flusher.thread);
     }
 
-    public void flushNow() {
+    @Override
+    public void flushNow(boolean sync) {
         // assert lock.isHeldByCurrentThread();
         try {
-            flusher.flushNow();
+            flusher.flushNow(sync);
         } catch (Exception e) {
             System.err.println("exception in flushNow:");
             e.printStackTrace();
@@ -151,7 +152,7 @@ public class MTLRenderQueue extends RenderQueue {
         // reset the buffer position
         buf.clear();
         // clear the set of references, since we no longer need them
-        refSet.clear();
+        refList.clear();
     }
 
     private class QueueFlusher implements Runnable {
@@ -170,9 +171,13 @@ public class MTLRenderQueue extends RenderQueue {
         }
 
         public synchronized void flushNow() {
+            flushNow(true);
+        }
+
+        public synchronized void flushNow(boolean latency) {
             // wake up the flusher
             needsFlush = true;
-            notify();
+            if (!latency) notify();
 
             // wait for flush to complete
             while (needsFlush) {
