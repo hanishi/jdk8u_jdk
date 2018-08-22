@@ -555,7 +555,7 @@ public class LWWindowPeer
 
     private Rectangle getDefaultMaximizedBounds() {
         GraphicsConfiguration config = getGraphicsConfiguration();
-        Insets screenInsets = ((CGraphicsDevice) config.getDevice())
+        Insets screenInsets = ((ScaledDevice) config.getDevice())
                 .getScreenInsets();
         Rectangle gcBounds = config.getBounds();
         return new Rectangle(

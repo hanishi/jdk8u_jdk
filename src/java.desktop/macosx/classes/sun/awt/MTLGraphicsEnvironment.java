@@ -1,35 +1,13 @@
-/*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package sun.awt;
 
-import java.awt.*;
-import java.util.*;
-
-import sun.java2d.*;
+import sun.java2d.MacosxSurfaceManagerFactory;
+import sun.java2d.SunGraphicsEnvironment;
+import sun.java2d.SurfaceManagerFactory;
 import sun.lwawt.macosx.CThreading;
+
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is an implementation of a GraphicsEnvironment object for the default
@@ -39,7 +17,7 @@ import sun.lwawt.macosx.CThreading;
  * @see GraphicsDevice
  * @see GraphicsConfiguration
  */
-public final class CGraphicsEnvironment extends SunGraphicsEnvironment implements ScreenEnvironment {
+public final class MTLGraphicsEnvironment extends SunGraphicsEnvironment implements ScreenEnvironment {
 
     /**
      * Fetch an array of all valid CoreGraphics display identifiers.
@@ -79,7 +57,7 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
     private native void deregisterDisplayReconfiguration(long context);
 
     /** Available CoreGraphics displays. */
-    private final Map<Integer, CGraphicsDevice> devices = new HashMap<>(5);
+    private final Map<Integer, MTLGraphicsDevice> devices = new HashMap<>(5);
     /**
      * The key in the {@link #devices} for the main display.
      */
@@ -91,7 +69,7 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
     /**
      * Construct a new instance.
      */
-    public CGraphicsEnvironment() {
+    public MTLGraphicsEnvironment() {
         if (isHeadless()) {
             displayReconfigContext = 0L;
             return;
@@ -119,7 +97,7 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
             // We don't need to switch to AppKit, we're already there
             mainDisplayID = getMainDisplayID();
             if (removed && devices.containsKey(displayId)) {
-                final CGraphicsDevice gd = devices.remove(displayId);
+                final MTLGraphicsDevice gd = devices.remove(displayId);
                 gd.invalidate(mainDisplayID);
                 gd.displayChanged();
             }
@@ -159,7 +137,7 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
 
             try {
                 mainDisplayID = CThreading.privilegedExecuteOnAppKit(
-                        CGraphicsEnvironment::getMainDisplayID);
+                        MTLGraphicsEnvironment::getMainDisplayID);
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -174,16 +152,16 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
     }
 
     private void createDevices() {
-        final Map<Integer, CGraphicsDevice> old = new HashMap<>(devices);
+        final Map<Integer, MTLGraphicsDevice> old = new HashMap<>(devices);
         devices.clear();
 
         if (!old.containsKey(mainDisplayID)) {
-            old.put(mainDisplayID, new CGraphicsDevice(mainDisplayID));
+            old.put(mainDisplayID, new MTLGraphicsDevice(mainDisplayID));
         }
         int[] displayIDs;
         try {
             displayIDs = CThreading.privilegedExecuteOnAppKit(
-                    CGraphicsEnvironment::getDisplayIDs);
+                    MTLGraphicsEnvironment::getDisplayIDs);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -193,13 +171,13 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
 
         for (final int id : displayIDs) {
             devices.put(id, old.containsKey(id) ? old.get(id)
-                                                : new CGraphicsDevice(id));
+                                                : new MTLGraphicsDevice(id));
         }
     }
 
     @Override
     public synchronized GraphicsDevice getDefaultScreenDevice() throws HeadlessException {
-        CGraphicsDevice d = devices.get(mainDisplayID);
+        GraphicsDevice d = devices.get(mainDisplayID);
         if (d == null) {
             // we do not expect that this may happen, the only response
             // is to re-initialize the list of devices
@@ -215,7 +193,7 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment implement
 
     @Override
     public synchronized GraphicsDevice[] getScreenDevices() throws HeadlessException {
-        return devices.values().toArray(new CGraphicsDevice[devices.values().size()]);
+        return devices.values().toArray(new MTLGraphicsDevice[devices.values().size()]);
     }
 
     public synchronized GraphicsDevice getScreenDevice(int displayID) {

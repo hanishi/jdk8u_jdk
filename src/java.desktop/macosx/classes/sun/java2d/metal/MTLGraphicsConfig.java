@@ -25,8 +25,7 @@
 
 package sun.java2d.metal;
 
-import sun.awt.CGraphicsConfig;
-import sun.awt.CGraphicsDevice;
+import sun.awt.MTLGraphicsDevice;
 import sun.awt.image.OffScreenImage;
 import sun.awt.image.SunVolatileImage;
 import sun.java2d.Disposer;
@@ -37,12 +36,15 @@ import sun.java2d.pipe.hw.AccelSurface;
 import sun.java2d.pipe.hw.AccelTypedVolatileImage;
 import sun.java2d.pipe.hw.ContextCapabilities;
 import sun.lwawt.LWComponentPeer;
+import sun.lwawt.LWGraphicsConfig;
 import sun.lwawt.macosx.CFRetainedResource;
 import sun.lwawt.macosx.CPlatformView;
 import sun.lwawt.macosx.CThreading;
 
 import java.awt.*;
 import java.awt.color.ColorSpace;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
@@ -52,9 +54,12 @@ import static sun.java2d.opengl.OGLContext.OGLContextCaps.CAPS_EXT_FBOBJECT;
 import static sun.java2d.opengl.OGLSurfaceData.FBOBJECT;
 import static sun.java2d.opengl.OGLSurfaceData.TEXTURE;
 
-public final class MTLGraphicsConfig extends CGraphicsConfig
-    implements MTLGraphicsConfigBase
+public final class MTLGraphicsConfig extends GraphicsConfiguration
+    implements MTLGraphicsConfigBase, LWGraphicsConfig
 {
+    private final MTLGraphicsDevice device;
+    private ColorModel colorModel;
+
     //private static final int kOpenGLSwapInterval =
     // RuntimeOptions.getCurrentOptions().OpenGLSwapInterval;
     private static final int kOpenGLSwapInterval = 0; // TODO
@@ -88,10 +93,10 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
         cglAvailable = initMTL();
     }
 
-    private MTLGraphicsConfig(CGraphicsDevice device, int pixfmt,
+    private MTLGraphicsConfig(MTLGraphicsDevice device, int pixfmt,
                               long configInfo, int maxTextureSize,
                               ContextCapabilities oglCaps) {
-        super(device);
+        this.device = device;
 
         this.pixfmt = pixfmt;
         this.pConfigInfo = configInfo;
@@ -102,7 +107,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
         // add a record to the Disposer so that we destroy the native
         // CGLGraphicsConfigInfo data when this object goes away
         Disposer.addRecord(disposerReferent,
-                           new CGLGCDisposerRecord(pConfigInfo));
+                           new MTLGCDisposerRecord(pConfigInfo));
     }
 
     @Override
@@ -118,7 +123,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
                                          MTLSurfaceData.TEXTURE);
     }
 
-    public static MTLGraphicsConfig getConfig(CGraphicsDevice device,
+    public static MTLGraphicsConfig getConfig(MTLGraphicsDevice device,
                                               int pixfmt)
     {
         if (!cglAvailable) {
@@ -236,12 +241,25 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     }
 
     @Override
+    public MTLGraphicsDevice getDevice() {
+        return device;
+    }
+
+    @Override
     public BufferedImage createCompatibleImage(int width, int height) {
         ColorModel model = new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
         WritableRaster
             raster = model.createCompatibleWritableRaster(width, height);
         return new BufferedImage(model, raster, model.isAlphaPremultiplied(),
                                  null);
+    }
+
+    @Override
+    public ColorModel getColorModel() {
+        if (colorModel == null) {
+            colorModel = getColorModel(Transparency.OPAQUE);
+        }
+        return colorModel;
     }
 
     @Override
@@ -263,13 +281,32 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
         }
     }
 
+    @Override
+    public AffineTransform getDefaultTransform() {
+        double scaleFactor = device.getScaleFactor();
+        return AffineTransform.getScaleInstance(scaleFactor, scaleFactor);
+    }
+
+    @Override
+    public AffineTransform getNormalizingTransform() {
+        double xscale = device.getXResolution() / 72.0;
+        double yscale = device.getYResolution() / 72.0;
+        return new AffineTransform(xscale, 0.0, 0.0, yscale, 0.0, 0.0);
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        final Rectangle2D nativeBounds = nativeGetBounds(device.getCGDisplayID());
+        return nativeBounds.getBounds(); // does integer rounding
+    }
+
     public boolean isDoubleBuffered() {
         return isCapPresent(CAPS_DOUBLEBUFFERED);
     }
 
-    private static class CGLGCDisposerRecord implements DisposerRecord {
+    private static class MTLGCDisposerRecord implements DisposerRecord {
         private long pCfgInfo;
-        public CGLGCDisposerRecord(long pCfgInfo) {
+        public MTLGCDisposerRecord(long pCfgInfo) {
             this.pCfgInfo = pCfgInfo;
         }
         public void dispose() {
@@ -303,12 +340,10 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
         return ("MTLGraphicsConfig[dev="+displayID+",pixfmt="+pixfmt+"]");
     }
 
-    @Override
     public SurfaceData createSurfaceData(CPlatformView pView) {
         return MTLSurfaceData.createData(pView);
     }
 
-    @Override
     public SurfaceData createSurfaceData(CFRetainedResource layer) {
         return MTLSurfaceData.createData((MTLLayer) layer);
     }
@@ -456,4 +491,6 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
         return Math.max(maxTextureSize / getDevice().getScaleFactor(),
                         getBounds().height);
     }
+
+    private static native Rectangle2D nativeGetBounds(int screen);
 }

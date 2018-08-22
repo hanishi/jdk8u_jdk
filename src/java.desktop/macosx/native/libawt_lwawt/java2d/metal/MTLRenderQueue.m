@@ -459,12 +459,16 @@ Java_sun_java2d_metal_MTLRenderQueue_flushBuffer
                         }];
                     } else {
                         dstOps = oldDstOps;
-                        MTLSDOps *dstCGLOps = (MTLSDOps *)dstOps->privOps;
-                        MTLLayer *layer = (MTLLayer*)dstCGLOps->layer;
-                        if (layer != NULL) {
-                            [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
-                                [layer beginFrame];
-                            }];
+                        if (dstOps!= NULL) {
+                            MTLSDOps *dstCGLOps = (MTLSDOps *)dstOps->privOps;
+                            MTLLayer *layer = (MTLLayer*)dstCGLOps->layer;
+                            if (layer != NULL) {
+                                [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+                                    [layer beginFrame];
+                                }];
+                            }
+                        } else {
+                            fprintf(stderr, "dstOps is still NULL\n");
                         }
                     }
                 }

@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import sun.awt.CGraphicsConfig;
-import sun.awt.CGraphicsEnvironment;
+import sun.awt.ScreenEnvironment;
 import sun.java2d.macos.MacOSFlags;
 import sun.java2d.metal.MTLLayer;
 import sun.java2d.metal.MTLSurfaceData;
@@ -180,7 +180,7 @@ public class CPlatformView extends CFRetainedResource {
 
     public GraphicsDevice getGraphicsDevice() {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        CGraphicsEnvironment cge = (CGraphicsEnvironment)ge;
+        ScreenEnvironment cge = (ScreenEnvironment)ge;
         AtomicInteger ref = new AtomicInteger();
         execute(ptr -> {
             ref.set(nativeGetNSViewDisplayID(ptr));

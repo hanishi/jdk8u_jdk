@@ -34,10 +34,9 @@ import java.awt.MenuBar;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
-import sun.awt.CGraphicsDevice;
-import sun.awt.CGraphicsEnvironment;
 import java.awt.event.FocusEvent;
 import sun.awt.LightweightFrame;
+import sun.awt.ScaledDevice;
 import sun.java2d.SurfaceData;
 import sun.lwawt.LWLightweightFramePeer;
 import sun.lwawt.LWWindowPeer;
@@ -187,8 +186,7 @@ public class CPlatformLWWindow extends CPlatformWindow {
 
     @Override
     public GraphicsDevice getGraphicsDevice() {
-        CGraphicsEnvironment ge = (CGraphicsEnvironment)GraphicsEnvironment.
-                                  getLocalGraphicsEnvironment();
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 
         LWLightweightFramePeer peer = (LWLightweightFramePeer)getPeer();
         int scale =(int) Math.round(((LightweightFrame)peer.getTarget())
@@ -197,7 +195,7 @@ public class CPlatformLWWindow extends CPlatformWindow {
         Rectangle bounds = ((LightweightFrame)peer.getTarget()).getHostBounds();
         for (GraphicsDevice d : ge.getScreenDevices()) {
             if (d.getDefaultConfiguration().getBounds().intersects(bounds) &&
-                ((CGraphicsDevice)d).getScaleFactor() == scale)
+                ((ScaledDevice)d).getScaleFactor() == scale)
             {
                 return d;
             }
