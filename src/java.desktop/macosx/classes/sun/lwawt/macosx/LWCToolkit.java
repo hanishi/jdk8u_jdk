@@ -396,14 +396,14 @@ public final class LWCToolkit extends LWToolkit {
 
     @Override
     public int getScreenResolution() throws HeadlessException {
-        return (int) ((ScaledDevice) GraphicsEnvironment
+        return (int) ((CGraphicsDevice) GraphicsEnvironment
                 .getLocalGraphicsEnvironment().getDefaultScreenDevice())
                 .getXResolution();
     }
 
     @Override
     public Insets getScreenInsets(final GraphicsConfiguration gc) {
-        return ((ScaledDevice)gc.getDevice()).getScreenInsets();
+        return ((CGraphicsConfig) gc).getDevice().getScreenInsets();
     }
 
     @Override
@@ -417,7 +417,7 @@ public final class LWCToolkit extends LWToolkit {
 
     @Override
     public RobotPeer createRobot(Robot target, GraphicsDevice screen) {
-        return new CRobot(target, (ScaledDevice) screen);
+        return new CRobot(target, (CGraphicsDevice)screen);
     }
 
     private native boolean isCapsLockOn();

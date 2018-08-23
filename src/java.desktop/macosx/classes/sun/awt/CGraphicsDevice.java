@@ -25,13 +25,20 @@
 
 package sun.awt;
 
-import java.awt.*;
+import java.awt.AWTPermission;
+import java.awt.DisplayMode;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.Insets;
+import java.awt.Window;
 import java.util.Objects;
 import sun.java2d.SunGraphicsEnvironment;
+import sun.java2d.macos.MacOSFlags;
+import sun.java2d.metal.MTLGraphicsConfig;
 import sun.java2d.opengl.CGLGraphicsConfig;
 
 public final class CGraphicsDevice extends GraphicsDevice
-        implements DisplayChangedListener, ScaledDevice {
+        implements DisplayChangedListener {
 
     /**
      * CoreGraphics display ID. This identifier can become non-valid at any time
@@ -56,8 +63,11 @@ public final class CGraphicsDevice extends GraphicsDevice
     public CGraphicsDevice(final int displayID) {
         this.displayID = displayID;
         configs = new GraphicsConfiguration[] {
-                CGLGraphicsConfig.getConfig(this, 0)
+                MacOSFlags.isMetalEnabled() ?
+                        MTLGraphicsConfig.getConfig(this, 0) :
+                        CGLGraphicsConfig.getConfig(this, 0)
         };
+        System.err.println(nativeGetMetalDeviceName(displayID));
     }
 
     /**
@@ -123,17 +133,6 @@ public final class CGraphicsDevice extends GraphicsDevice
         return nativeGetScreenInsets(displayID);
     }
 
-    @Override
-    public int getDisplayID() {
-        return getCGDisplayID();
-    }
-
-    @Override
-    public Rectangle getDefaultBounds() {
-        return getDefaultConfiguration().getBounds();
-    }
-
-    @Override
     public int getScaleFactor() {
         return scale;
     }

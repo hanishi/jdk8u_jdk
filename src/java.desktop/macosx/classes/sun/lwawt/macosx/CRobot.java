@@ -28,12 +28,12 @@ package sun.lwawt.macosx;
 import java.awt.*;
 import java.awt.peer.*;
 
-import sun.awt.ScaledDevice;
+import sun.awt.CGraphicsDevice;
 
 class CRobot implements RobotPeer {
     private static final int MOUSE_LOCATION_UNKNOWN      = -1;
 
-    private final ScaledDevice fDevice;
+    private final CGraphicsDevice fDevice;
     private int mouseLastX = MOUSE_LOCATION_UNKNOWN;
     private int mouseLastY = MOUSE_LOCATION_UNKNOWN;
 
@@ -46,7 +46,7 @@ class CRobot implements RobotPeer {
      * Uses the given GraphicsDevice as the coordinate system for subsequent
      * coordinate calls.
      */
-    public CRobot(Robot r, ScaledDevice d) {
+    public CRobot(Robot r, CGraphicsDevice d) {
         fDevice = d;
         initRobot();
     }
@@ -65,7 +65,7 @@ class CRobot implements RobotPeer {
         mouseLastX = x;
         mouseLastY = y;
 
-        mouseEvent(fDevice.getDisplayID(), mouseLastX, mouseLastY,
+        mouseEvent(fDevice.getCGDisplayID(), mouseLastX, mouseLastY,
                    mouseButtonsState, true, true);
     }
 
@@ -79,7 +79,7 @@ class CRobot implements RobotPeer {
     public void mousePress(int buttons) {
         mouseButtonsState |= buttons;
         checkMousePos();
-        mouseEvent(fDevice.getDisplayID(), mouseLastX, mouseLastY,
+        mouseEvent(fDevice.getCGDisplayID(), mouseLastX, mouseLastY,
                    buttons, true, false);
     }
 
@@ -93,7 +93,7 @@ class CRobot implements RobotPeer {
     public void mouseRelease(int buttons) {
         mouseButtonsState &= ~buttons;
         checkMousePos();
-        mouseEvent(fDevice.getDisplayID(), mouseLastX, mouseLastY,
+        mouseEvent(fDevice.getCGDisplayID(), mouseLastX, mouseLastY,
                    buttons, false, false);
     }
 
@@ -104,7 +104,7 @@ class CRobot implements RobotPeer {
         if (mouseLastX == MOUSE_LOCATION_UNKNOWN ||
                 mouseLastY == MOUSE_LOCATION_UNKNOWN) {
 
-            Rectangle deviceBounds = fDevice.getDefaultBounds();
+            Rectangle deviceBounds = fDevice.getDefaultConfiguration().getBounds();
             Point mousePos = CCursorManager.getInstance().getCursorPosition();
 
             if (mousePos.x < deviceBounds.x) {

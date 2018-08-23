@@ -27,6 +27,7 @@ package sun.awt;
 
 import java.awt.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import sun.java2d.*;
 import sun.lwawt.macosx.CThreading;
@@ -39,7 +40,7 @@ import sun.lwawt.macosx.CThreading;
  * @see GraphicsDevice
  * @see GraphicsConfiguration
  */
-public final class CGraphicsEnvironment extends SunGraphicsEnvironment implements ScreenEnvironment {
+public final class CGraphicsEnvironment extends SunGraphicsEnvironment {
 
     /**
      * Fetch an array of all valid CoreGraphics display identifiers.

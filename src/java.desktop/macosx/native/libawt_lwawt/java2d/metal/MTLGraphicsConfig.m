@@ -28,8 +28,6 @@
 #import "MTLGraphicsConfig.h"
 #import "MTLSurfaceData.h"
 #import "ThreadUtilities.h"
-#include "LWCToolkit.h"
-#include "GeomUtilities.h"
 
 #import <stdlib.h>
 #import <string.h>
@@ -385,25 +383,4 @@ Java_sun_java2d_metal_MTLGraphicsConfig_nativeGetMaxTextureSize
     }];
 
     return (jint)max;
-}
-
-
-/*
- * Class:     sun_awt_MTLGraphicsConfig
- * Method:    nativeGetBounds
- * Signature: (I)Ljava/awt/Rectangle;
- */
-JNIEXPORT jobject JNICALL Java_sun_java2d_metal_MTLGraphicsConfig_nativeGetBounds
-        (JNIEnv *env, jclass class, jint displayID)
-{
-    jobject jrect = NULL;
-
-    JNF_COCOA_ENTER(env);
-
-    CGRect rect = CGDisplayBounds((CGDirectDisplayID)displayID);
-    jrect = CGToJavaRect(env, rect);
-
-    JNF_COCOA_EXIT(env);
-
-    return jrect;
 }
