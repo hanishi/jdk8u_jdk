@@ -67,7 +67,7 @@ AWT_ASSERT_APPKIT_THREAD;
     _device = MTLCreateSystemDefaultDevice();
     self.device          = _device;
     NSError *error = nil;
-    _library = [_device newLibraryWithFile: @"/Users/avu/export/jdk8u.git/build/macosx-x86_64-normal-server-release/images/jdk-bundle/jdk-9.0.1.jdk/Contents/Home/lib/shaders.metallib" error:&error];
+    _library = [_device newLibraryWithFile: @"/Users/avu/export/jdk8u.git/build/macosx-x86_64-normal-server-fastdebug/images/jdk-bundle/jdk-9.0.1.jdk/Contents/Home/lib/shaders.metallib" error:&error];
     if (!_library) {
         NSLog(@"Failed to load library. error %@", error);
         exit(0);

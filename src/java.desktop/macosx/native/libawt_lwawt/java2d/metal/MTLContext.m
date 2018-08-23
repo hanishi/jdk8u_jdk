@@ -58,7 +58,7 @@ MTLBlendRule MTStdBlendRules[] = {
 };
 
 /** Evaluates to "front" or "back", depending on the value of buf. */
-#define MTLC_ACTIVE_BUFFER_NAME(buf) \
+//#define MTLC_ACTIVE_BUFFER_NAME(buf) \
     (buf == GL_FRONT || buf == GL_COLOR_ATTACHMENT0_EXT) ? "front" : "back"
 
 /**
@@ -74,12 +74,12 @@ MTLContext_SetViewport(BMTLSDOps *srcOps,BMTLSDOps *dstOps)
     jint width = dstOps->width;
     jint height = dstOps->height;
 
-    J2dTraceLn4(J2D_TRACE_INFO,
+/*    J2dTraceLn4(J2D_TRACE_INFO,
                 "MTLContext_SetViewport: w=%d h=%d read=%s draw=%s",
                 width, height,
                 MTLC_ACTIVE_BUFFER_NAME(srcOps->activeBuffer),
                 MTLC_ACTIVE_BUFFER_NAME(dstOps->activeBuffer));
-
+*/
 }
 
 /**
