@@ -198,10 +198,6 @@ MTLSD_MakeMTLContextCurrent(JNIEnv *env, BMTLSDOps *srcOps, BMTLSDOps *dstOps)
             MTLSDOps *cglsdo = (MTLSDOps *)dstOps->privOps;
             NSView *nsView = (NSView *)cglsdo->peerData;
 
-            if ([ctxinfo->context view] != nsView) {
-              //  [ctxinfo->context makeCurrentContext];
-              //  [ctxinfo->context setView: nsView];
-            }
 
             if (MTLC_IS_CAP_PRESENT(oglc, CAPS_EXT_FBOBJECT)) {
                 // the GL_EXT_framebuffer_object extension is present, so we
@@ -345,8 +341,5 @@ Java_sun_java2d_metal_MTLSurfaceData_validate
         MTLContext *mtlc = cglsdo->configInfo->context;
         MTLCtxInfo *ctxinfo = (MTLCtxInfo *)mtlc->ctxInfo;
 
-JNF_COCOA_ENTER(env);
-        [ctxinfo->context update];
-JNF_COCOA_EXIT(env);
     }
 }

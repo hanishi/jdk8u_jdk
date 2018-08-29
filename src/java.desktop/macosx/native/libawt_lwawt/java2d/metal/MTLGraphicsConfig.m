@@ -62,9 +62,7 @@ MTLGC_DestroyMTLGraphicsConfig(jlong pConfigInfo)
         MTLCtxInfo *ctxinfo = (MTLCtxInfo *)oglc->ctxInfo;
         if (ctxinfo != NULL) {
             NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-            [NSOpenGLContext clearCurrentContext];
-            [ctxinfo->context clearDrawable];
-            [ctxinfo->context release];
+            [ctxinfo->mtlDevice release];
             if (ctxinfo->scratchSurface != 0) {
                 [ctxinfo->scratchSurface release];
             }
@@ -86,8 +84,7 @@ MTLGC_DestroyMTLGraphicsConfig(jlong pConfigInfo)
  * context, which means any texture objects created when this shared context
  * is current will be available to any other context in any other thread.
  */
-extern NSOpenGLContext *sharedContext;
-extern NSOpenGLPixelFormat *sharedPixelFormat;
+//id<MTLDevice> *sharedMTLDevice;
 
 /**
  * Attempts to initialize CGL and the core OpenGL library.
@@ -97,7 +94,6 @@ Java_sun_java2d_metal_MTLGraphicsConfig_initMTL
     (JNIEnv *env, jclass cglgc)
 {
     J2dRlsTraceLn(J2D_TRACE_INFO, "MTLGraphicsConfig_initMTL");
-//fprintf(stderr, "MTLGraphicsConfig_initMTL\n");
 
     if (!MTLFuncs_OpenLibrary()) {
         return JNI_FALSE;
@@ -110,12 +106,6 @@ Java_sun_java2d_metal_MTLGraphicsConfig_initMTL
         MTLFuncs_CloseLibrary();
         return JNI_FALSE;
     }
-#ifdef REMOTELAYER
-    pthread_t jrsRemoteThread;
-    pthread_create(&jrsRemoteThread, NULL, JRSRemoteThreadFn, NULL);
-#endif
-
-//fprintf(stderr, "MTLGraphicsConfig_initMTL: OK\n");
 
     return JNI_TRUE;
 }
@@ -133,15 +123,12 @@ Java_sun_java2d_metal_MTLGraphicsConfig_initMTL
  */
 JNIEXPORT jlong JNICALL
 Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
-    (JNIEnv *env, jclass cglgc,
-     jint displayID, jint pixfmt, jint swapInterval)
+    (JNIEnv *env, jclass cglgc, jint displayID)
 {
   jlong ret = 0L;
   JNF_COCOA_ENTER(env);
   NSMutableArray * retArray = [NSMutableArray arrayWithCapacity:3];
   [retArray addObject: [NSNumber numberWithInt: (int)displayID]];
-  [retArray addObject: [NSNumber numberWithInt: (int)pixfmt]];
-  [retArray addObject: [NSNumber numberWithInt: (int)swapInterval]];
   if ([NSThread isMainThread]) {
       [MTLGraphicsConfigUtil _getMTLConfigInfo: retArray];
   } else {
@@ -160,8 +147,6 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
     AWT_ASSERT_APPKIT_THREAD;
 
     jint displayID = (jint)[(NSNumber *)[argValue objectAtIndex: 0] intValue];
-    jint pixfmt = (jint)[(NSNumber *)[argValue objectAtIndex: 1] intValue];
-    jint swapInterval = (jint)[(NSNumber *)[argValue objectAtIndex: 2] intValue];
     JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
     [argValue removeAllObjects];
 
@@ -169,45 +154,15 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
 
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
-    CGOpenGLDisplayMask glMask = (CGOpenGLDisplayMask)pixfmt;
-    if (sharedContext == NULL) {
-        if (glMask == 0) {
-            glMask = CGDisplayIDToOpenGLDisplayMask(displayID);
-        }
-
-        NSOpenGLPixelFormatAttribute attrs[] = {
-            NSOpenGLPFAAllowOfflineRenderers,
-            NSOpenGLPFAClosestPolicy,
-            NSOpenGLPFAWindow,
-            NSOpenGLPFAPixelBuffer,
-            NSOpenGLPFADoubleBuffer,
-            NSOpenGLPFAColorSize, 32,
-            NSOpenGLPFAAlphaSize, 8,
-            NSOpenGLPFADepthSize, 16,
-            NSOpenGLPFAScreenMask, glMask,
-            0
-        };
-
-        sharedPixelFormat =
-            [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
-        if (sharedPixelFormat == nil) {
-            J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: shared NSOpenGLPixelFormat is NULL");
-            [argValue addObject: [NSNumber numberWithLong: 0L]];
-            return;
-        }
-
-        sharedContext =
-            [[NSOpenGLContext alloc]
-                initWithFormat:sharedPixelFormat
-                shareContext: NULL];
-        if (sharedContext == nil) {
-            J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: shared NSOpenGLContext is NULL");
+    if (sharedMTLDevice == NULL) {
+        sharedMTLDevice = CGDirectDisplayCopyCurrentMetalDevice(displayID);
+        if (sharedMTLDevice == nil) {
+            J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: shared MetalDevice is NULL");
             [argValue addObject: [NSNumber numberWithLong: 0L]];
             return;
         }
     }
 
-#if USE_NSVIEW_FOR_SCRATCH
     NSRect contentRect = NSMakeRect(0, 0, 64, 64);
     NSWindow *window =
         [[NSWindow alloc]
@@ -231,83 +186,15 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
     }
     fprintf(stderr, "USE_NSVIEW_FOR_SCRATCH");
     [window setContentView: scratchSurface];
-#else
-    NSOpenGLPixelBuffer *scratchSurface =
-        [[NSOpenGLPixelBuffer alloc]
-            initWithTextureTarget:GL_TEXTURE_2D
-            textureInternalFormat:GL_RGB
-            textureMaxMipMapLevel:0
-            pixelsWide:64
-            pixelsHigh:64];
-#endif
-
-    NSOpenGLContext *context =
-        [[NSOpenGLContext alloc]
-            initWithFormat: sharedPixelFormat
-            shareContext: sharedContext];
-    if (context == nil) {
-        J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: NSOpenGLContext is NULL");
-        [argValue addObject: [NSNumber numberWithLong: 0L]];
-        return;
-    }
-
-    GLint contextVirtualScreen = [context currentVirtualScreen];
-#if USE_NSVIEW_FOR_SCRATCH
-    [context setView: scratchSurface];
-#else
-    [context
-        setPixelBuffer: scratchSurface
-        cubeMapFace:0
-        mipMapLevel:0
-        currentVirtualScreen: contextVirtualScreen];
-#endif
-    [context makeCurrentContext];
-
-    // get version and extension strings
-/*    const unsigned char *versionstr = j2d_glGetString(GL_VERSION);
-    if (!MTLContext_IsVersionSupported(versionstr)) {
-        J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: OpenGL 1.2 is required");
-        [NSOpenGLContext clearCurrentContext];
-        [argValue addObject: [NSNumber numberWithLong: 0L]];
-        return;
-    }*/
-//    J2dRlsTraceLn1(J2D_TRACE_INFO, "MTLGraphicsConfig_getMTLConfigInfo: OpenGL version=%s", versionstr);
 
     jint caps = CAPS_EMPTY;
     MTLContext_GetExtensionInfo(env, &caps);
 
-    GLint value = 0;
-    [sharedPixelFormat
-        getValues: &value
-        forAttribute: NSOpenGLPFADoubleBuffer
-        forVirtualScreen: contextVirtualScreen];
-    if (value != 0) {
-        caps |= CAPS_DOUBLEBUFFERED;
-    }
+    caps |= CAPS_DOUBLEBUFFERED;
 
     J2dRlsTraceLn1(J2D_TRACE_INFO,
-                   "MTLGraphicsConfig_getCGLConfigInfo: db=%d",
+                   "MTLGraphicsConfig_getMTLConfigInfo: db=%d",
                    (caps & CAPS_DOUBLEBUFFERED) != 0);
-
-    // remove before shipping (?)
-#if 1
-    [sharedPixelFormat
-        getValues: &value
-        forAttribute: NSOpenGLPFAAccelerated
-        forVirtualScreen: contextVirtualScreen];
-    if (value == 0) {
-        [sharedPixelFormat
-            getValues: &value
-            forAttribute: NSOpenGLPFARendererID
-            forVirtualScreen: contextVirtualScreen];
-        fprintf(stderr, "WARNING: GL pipe is running in software mode (Renderer ID=0x%x)\n", (int)value);
-    }
-#endif
-
-    // 0: the buffers are swapped with no regard to the vertical refresh rate
-    // 1: the buffers are swapped only during the vertical retrace
-    GLint params = swapInterval;
-    [context setValues: &params forParameter: NSOpenGLCPSwapInterval];
 
     MTLCtxInfo *ctxinfo = (MTLCtxInfo *)malloc(sizeof(MTLCtxInfo));
     if (ctxinfo == NULL) {
@@ -317,20 +204,20 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
         return;
     }
     memset(ctxinfo, 0, sizeof(MTLCtxInfo));
-    ctxinfo->context = context;
     ctxinfo->scratchSurface = scratchSurface;
+    ctxinfo->mtlDevice = CGDirectDisplayCopyCurrentMetalDevice(displayID);
 
-    MTLContext *oglc = (MTLContext *)malloc(sizeof(MTLContext));
-    if (oglc == 0L) {
+    MTLContext *mtlc = (MTLContext *)malloc(sizeof(MTLContext));
+    if (mtlc == 0L) {
         J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGC_InitMTLContext: could not allocate memory for mtlc");
         [NSOpenGLContext clearCurrentContext];
         free(ctxinfo);
         [argValue addObject: [NSNumber numberWithLong: 0L]];
         return;
     }
-    memset(oglc, 0, sizeof(MTLContext));
-    oglc->ctxInfo = ctxinfo;
-    oglc->caps = caps;
+    memset(mtlc, 0, sizeof(MTLContext));
+    mtlc->ctxInfo = ctxinfo;
+    mtlc->caps = caps;
 
     // create the MTLGraphicsConfigInfo record for this config
     MTLGraphicsConfigInfo *mtlinfo = (MTLGraphicsConfigInfo *)malloc(sizeof(MTLGraphicsConfigInfo));
@@ -344,7 +231,6 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
     }
     memset(mtlinfo, 0, sizeof(MTLGraphicsConfigInfo));
     mtlinfo->screen = displayID;
-    mtlinfo->pixfmt = sharedPixelFormat;
     mtlinfo->context = oglc;
 
   //  [NSOpenGLContext clearCurrentContext];
@@ -376,11 +262,8 @@ Java_sun_java2d_metal_MTLGraphicsConfig_nativeGetMaxTextureSize
 
     __block int max = 0;
 
-    [ThreadUtilities performOnMainThreadWaiting:YES block:^(){
-        [sharedContext makeCurrentContext];
-//        j2d_glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-        [NSOpenGLContext clearCurrentContext];
-    }];
+//    [ThreadUtilities performOnMainThreadWaiting:YES block:^(){
+//    }];
 
     return (jint)max;
 }

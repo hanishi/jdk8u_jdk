@@ -58,7 +58,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     //private static final int kOpenGLSwapInterval =
     // RuntimeOptions.getCurrentOptions().OpenGLSwapInterval;
     private static final int kOpenGLSwapInterval = 0; // TODO
-    private static boolean cglAvailable;
+    private static boolean mtlAvailable;
     private static ImageCapabilities imageCaps = new CGLImageCaps();
 
     private int pixfmt;
@@ -70,8 +70,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     private final int maxTextureSize;
 
     private static native boolean initMTL();
-    private static native long getMTLConfigInfo(int displayID, int visualnum,
-                                                int swapInterval);
+    private static native long getMTLConfigInfo(int displayID);
     private static native int getMTLCapabilities(long configInfo);
 
     /**
@@ -85,7 +84,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     private static final HashMap<Long, Integer> pGCRefCounts = new HashMap<>();
 
     static {
-        cglAvailable = initMTL();
+        mtlAvailable = initMTL();
     }
 
     private MTLGraphicsConfig(CGraphicsDevice device, int pixfmt,
@@ -121,7 +120,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     public static MTLGraphicsConfig getConfig(CGraphicsDevice device,
                                               int pixfmt)
     {
-        if (!cglAvailable) {
+        if (!mtlAvailable) {
             return null;
         }
 
@@ -146,8 +145,8 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
                     // Java-level context and flush the queue...
                     MTLContext.invalidateCurrentContext();
 
-                    cfginfo = getMTLConfigInfo(device.getCGDisplayID(), pixfmt,
-                            kOpenGLSwapInterval);
+                    cfginfo = getMTLConfigInfo(device.getCGDisplayID()
+                    );
                     if (cfginfo != 0L) {
                         textureSize = nativeGetMaxTextureSize();
                         // 7160609: GL still fails to create a square texture of this
@@ -208,7 +207,7 @@ public final class MTLGraphicsConfig extends CGraphicsConfig
     }
 
     public static boolean isCGLAvailable() {
-        return cglAvailable;
+        return mtlAvailable;
     }
 
     /**

@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef MTLGraphicsConfig_h_Included
 #define MTLGraphicsConfig_h_Included
 
@@ -30,6 +5,9 @@
 #import "MTLSurfaceDataBase.h"
 #import "MTLContext.h"
 #import <Cocoa/Cocoa.h>
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
+
 
 @interface MTLGraphicsConfigUtil : NSObject {}
 + (void) _getMTLConfigInfo: (NSMutableArray *)argValue;
@@ -54,25 +32,10 @@
  * This is only for testing purposes and can be removed if/when no
  * longer needed.
  */
-//#define REMOTELAYER 1
-
-#ifdef REMOTELAYER
-#import <JavaRuntimeSupport/JRSRemoteLayer.h>
-#import <pthread.h>
-#include <unistd.h>
-#include <stdio.h>
-#import <sys/socket.h>
-#import <sys/un.h>
-
-extern mach_port_t JRSRemotePort;
-extern int remoteSocketFD;
-extern void sendLayerID(int layerID);
-
-#endif /* REMOTELAYER */
 
 
 /**
- * The CGLGraphicsConfigInfo structure contains information specific to a
+ * The MTLGraphicsConfigInfo structure contains information specific to a
  * given CGLGraphicsConfig (pixel format).
  *
  *     jint screen;
@@ -91,26 +54,10 @@ typedef struct _MTLGraphicsConfigInfo {
 } MTLGraphicsConfigInfo;
 
 /**
- * The CGLCtxInfo structure contains the native CGLContext information
- * required by and is encapsulated by the platform-independent OGLContext
- * structure.
- *
- *     NSOpenGLContext *context;
- * The core native NSOpenGL context.  Rendering commands have no effect until
- * a context is made current (active).
- *
- *     NSOpenGLPixelBuffer *scratchSurface;
- * The scratch surface id used to make a context current when we do
- * not otherwise have a reference to an OpenGL surface for the purposes of
- * making a context current.
  */
 typedef struct _MTLCtxInfo {
-    NSOpenGLContext     *context;
-#if USE_NSVIEW_FOR_SCRATCH
+    id<MTLDevice>       mtlDevice;
     NSView              *scratchSurface;
-#else
-    NSOpenGLPixelBuffer *scratchSurface;
-#endif
 } MTLCtxInfo;
 
 #endif /* MTLGraphicsConfig_h_Included */
