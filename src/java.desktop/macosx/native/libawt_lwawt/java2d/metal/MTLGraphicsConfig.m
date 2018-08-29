@@ -78,13 +78,6 @@ MTLGC_DestroyMTLGraphicsConfig(jlong pConfigInfo)
 #pragma mark -
 #pragma mark "--- MTLGraphicsConfig methods ---"
 
-/**
- * This is a globally shared context used when creating textures.  When any
- * new contexts are created, they specify this context as the "share list"
- * context, which means any texture objects created when this shared context
- * is current will be available to any other context in any other thread.
- */
-//id<MTLDevice> *sharedMTLDevice;
 
 /**
  * Attempts to initialize CGL and the core OpenGL library.
@@ -154,14 +147,6 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
 
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
-    if (sharedMTLDevice == NULL) {
-        sharedMTLDevice = CGDirectDisplayCopyCurrentMetalDevice(displayID);
-        if (sharedMTLDevice == nil) {
-            J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: shared MetalDevice is NULL");
-            [argValue addObject: [NSNumber numberWithLong: 0L]];
-            return;
-        }
-    }
 
     NSRect contentRect = NSMakeRect(0, 0, 64, 64);
     NSWindow *window =
@@ -224,14 +209,14 @@ Java_sun_java2d_metal_MTLGraphicsConfig_getMTLConfigInfo
     if (mtlinfo == NULL) {
         J2dRlsTraceLn(J2D_TRACE_ERROR, "MTLGraphicsConfig_getMTLConfigInfo: could not allocate memory for mtlinfo");
         [NSOpenGLContext clearCurrentContext];
-        free(oglc);
+        free(mtlc);
         free(ctxinfo);
         [argValue addObject: [NSNumber numberWithLong: 0L]];
         return;
     }
     memset(mtlinfo, 0, sizeof(MTLGraphicsConfigInfo));
     mtlinfo->screen = displayID;
-    mtlinfo->context = oglc;
+    mtlinfo->context = mtlc;
 
   //  [NSOpenGLContext clearCurrentContext];
     [argValue addObject: [NSNumber numberWithLong:ptr_to_jlong(mtlinfo)]];
